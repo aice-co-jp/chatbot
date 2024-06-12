@@ -1,5 +1,7 @@
+// 全てクライアント側で動かす(all動的?)
 "use client"
 
+// from のモジュールから importの要素を利用できるようにする
 import { Dashboard } from "@/components/ui/dashboard"
 import { ChatbotUIContext } from "@/context/context"
 import { getAssistantWorkspacesByWorkspaceId } from "@/db/assistants"
@@ -20,17 +22,25 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { ReactNode, useContext, useEffect, useState } from "react"
 import Loading from "../loading"
 
+
+// interfaceは型定義。childrenはReactNode型のみを受け入れる
+// ReactNodeはほぼすべてを受け入れる相当柔軟な型定義
 interface WorkspaceLayoutProps {
   children: ReactNode
 }
-
+// exportは外部利用できるよ
+// defaultは初期設定
+//引数childrenで、WorkspaceLayoutProps型
 export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
+  //ルーティングを簡単に設定するためのもの
   const router = useRouter()
-
+  // idの取得
   const params = useParams()
+  // パラメータを取得
   const searchParams = useSearchParams()
+  //文字列にして
   const workspaceId = params.workspaceid as string
-
+  // 値を変更できる奴を読み込んでる？
   const {
     setChatSettings,
     setAssistants,
@@ -56,14 +66,17 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setNewMessageImages,
     setShowFilesDisplay
   } = useContext(ChatbotUIContext)
-
+  // 初期値true のusestate
   const [loading, setLoading] = useState(true)
 
+  //レンダリング後に実行される 
   useEffect(() => {
     ;(async () => {
+      //supabaseからセッション情報を取得(非同期)
       const session = (await supabase.auth.getSession()).data.session
-
+      // セッションが存在しないなら
       if (!session) {
+        // loginにナビゲートする
         return router.push("/login")
       } else {
         await fetchWorkspaceData(workspaceId)
@@ -71,6 +84,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     })()
   }, [])
 
+  //レンダリング後にworkspaceIdに変更があれば実行される 初期化 
   useEffect(() => {
     ;(async () => await fetchWorkspaceData(workspaceId))()
 
@@ -90,25 +104,26 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
 
   const fetchWorkspaceData = async (workspaceId: string) => {
     setLoading(true)
-
+    // workspaceidと同じidのワークスペースを取り出しselectedWorkspaceにセット
     const workspace = await getWorkspaceById(workspaceId)
     setSelectedWorkspace(workspace)
-
+    //workspaceidと同じidのワークスペースのid,name,assistantを取得しアシスタントをセット
     const assistantData = await getAssistantWorkspacesByWorkspaceId(workspaceId)
     setAssistants(assistantData.assistants)
-
+    // assistantが複数あるのか？データ構造があんまりわかってない
     for (const assistant of assistantData.assistants) {
       let url = ""
-
+      // アシスタントにimage_pathがあるなら24時間有効なURLを変数に入れる
       if (assistant.image_path) {
         url = (await getAssistantImageFromStorage(assistant.image_path)) || ""
       }
-
+      
       if (url) {
+        // urlからデータを取得して(?)、Base64に変換 blobは読み取り専用データ base64はデータを文字列にする際に使う規格
         const response = await fetch(url)
         const blob = await response.blob()
         const base64 = await convertBlobToBase64(blob)
-
+        // AssistantImagesにassistantId path base64 urlを足してセット
         setAssistantImages(prev => [
           ...prev,
           {
@@ -130,6 +145,8 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
         ])
       }
     }
+
+    // 新しくなったworkspaceIdでセットし直し
 
     const chats = await getChatsByWorkspaceId(workspaceId)
     setChats(chats)
@@ -174,10 +191,10 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
 
     setLoading(false)
   }
-
+  //fetchWorkspaceDataが処理し終わるまでLoadingの画面を出力
   if (loading) {
     return <Loading />
   }
-
+  // Dashboardにchildrenを渡して出力
   return <Dashboard>{children}</Dashboard>
 }
