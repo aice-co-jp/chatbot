@@ -15,7 +15,6 @@ import { toast } from "sonner"
 import { Input } from "../ui/input"
 import { TextareaAutosize } from "../ui/textarea-autosize"
 import { ChatCommandInput } from "./chat-command-input"
-import { ChatFilesDisplay } from "./chat-files-display"
 import { useChatHandler } from "./chat-hooks/use-chat-handler"
 import { useChatHistoryHandler } from "./chat-hooks/use-chat-history"
 import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
@@ -165,8 +164,6 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
   return (
     <>
       <div className="flex flex-col flex-wrap justify-center gap-2">
-        <ChatFilesDisplay />
-
         {selectedTools &&
           selectedTools.map((tool, index) => (
             <div
@@ -211,7 +208,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
         )}
       </div>
 
-      <div className="border-input relative mt-3 flex min-h-[60px] w-full items-center justify-center rounded-xl border-2">
+      <div className="border-input relative mt-3 flex min-h-[60px] w-full items-center justify-center rounded-[20px] border border-[#222222]">
         <div className="absolute bottom-[76px] left-0 max-h-[300px] w-full overflow-auto rounded-xl dark:border-none">
           <ChatCommandInput />
         </div>
@@ -253,17 +250,17 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
           onCompositionEnd={() => setIsTyping(false)}
         />
 
-        <div className="absolute bottom-[14px] right-3 cursor-pointer hover:opacity-50">
+        <div className="absolute bottom-[11px] right-6 cursor-pointer hover:opacity-50">
           {isGenerating ? (
             <IconPlayerStopFilled
               className="hover:bg-background animate-pulse rounded bg-transparent p-1"
               onClick={handleStopMessage}
-              size={30}
+              size={33}
             />
           ) : (
             <IconSend
               className={cn(
-                "bg-primary text-secondary rounded p-1",
+                "bg-primary text-secondary rounded-full p-1",
                 !userInput && "cursor-not-allowed opacity-50"
               )}
               onClick={() => {
@@ -271,7 +268,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
 
                 handleSendMessage(userInput, chatMessages, false)
               }}
-              size={30}
+              size={33}
             />
           )}
         </div>
